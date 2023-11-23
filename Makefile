@@ -8,6 +8,3 @@ down:
 	docker compose down
 clean:
 	./gradlew clean
-4443:4443
-    volumes:
-      - ./src/main/resources/gcp:/data
