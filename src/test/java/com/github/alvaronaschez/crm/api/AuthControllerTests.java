@@ -46,9 +46,13 @@ class AuthControllerTests {
         void login() throws Exception {
                 var result = this.mvc.perform(
                                 post("/v1/login").servletPath("/v1/login")
-                                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                                                .param("username", "admin")
-                                                .param("password", "secret"))
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content("""
+                                                                        {
+                                                                                "username": "admin",
+                                                                                "password": "secret"
+                                                                        }
+                                                                """))
                                 .andExpect(status().isNoContent()).andReturn();
 
                 var cookie = Arrays.stream(result.getResponse().getCookies()).findFirst().get();
@@ -62,9 +66,13 @@ class AuthControllerTests {
         void logout() throws Exception {
                 var result = this.mvc.perform(
                                 post("/v1/login").servletPath("/v1/login")
-                                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                                                .param("username", "admin")
-                                                .param("password", "secret"))
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content("""
+                                                                        {
+                                                                                "username": "admin",
+                                                                                "password": "secret"
+                                                                        }
+                                                                """))
                                 .andExpect(status().isNoContent()).andReturn();
 
                 var cookie = Arrays.stream(result.getResponse().getCookies()).findFirst().get();
