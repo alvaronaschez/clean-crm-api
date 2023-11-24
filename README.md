@@ -46,9 +46,5 @@ Visit [the OpenAPI documentation](http://localhost:8080/swagger-ui/index.html)
 And send some requests (using for example [HTTPie CLI](https://httpie.io/)):
 
 ```sh
-http --form POST http://localhost:8080/v1/login \
-  Content-Type:application/x-www-form-urlencoded \
-  username=admin \
-  password=secret
-
+http POST http://localhost:8080/v1/login username=admin password=secret
 ```
