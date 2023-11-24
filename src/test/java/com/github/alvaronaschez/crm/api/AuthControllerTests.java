@@ -55,7 +55,32 @@ class AuthControllerTests {
                 this.mvc.perform(
                                 get("/v1/me")
                                                 .cookie(new Cookie(cookie.getName(), cookie.getValue())))
-                                .andExpect(status().is2xxSuccessful());
+                                .andExpect(status().isOk());
+        }
+
+        @Test
+        void logout() throws Exception {
+                var result = this.mvc.perform(
+                                post("/v1/login").servletPath("/v1/login")
+                                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                                                .param("username", "admin")
+                                                .param("password", "secret"))
+                                .andExpect(status().isNoContent()).andReturn();
+
+                var cookie = Arrays.stream(result.getResponse().getCookies()).findFirst().get();
+
+                this.mvc.perform(
+                                get("/v1/me")
+                                                .cookie(new Cookie(cookie.getName(), cookie.getValue())))
+                                .andExpect(status().isOk());
+                this.mvc.perform(
+                                post("/v1/logout")
+                                                .cookie(new Cookie(cookie.getName(), cookie.getValue())))
+                                .andExpect(status().isOk());
+                this.mvc.perform(
+                                get("/v1/me")
+                                                .cookie(new Cookie(cookie.getName(), cookie.getValue())))
+                                .andExpect(status().isUnauthorized());
         }
 
 }
