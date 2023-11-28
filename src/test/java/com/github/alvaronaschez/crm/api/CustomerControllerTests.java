@@ -61,6 +61,7 @@ public class CustomerControllerTests {
         @Test
         @Order(2)
         @WithUserDetails(value = "admin")
+        @SuppressWarnings({ "unchecked" })
         void happyPathTest() throws Exception {
                 var admin = this.userService.getActiveUserByUsername("admin");
                 var result = this.mvc.perform(
