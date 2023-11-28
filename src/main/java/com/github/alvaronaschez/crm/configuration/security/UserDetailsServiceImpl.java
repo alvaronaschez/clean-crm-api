@@ -5,7 +5,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.github.alvaronaschez.crm.application.UserService;
+import com.github.alvaronaschez.crm.application.UserRepositoryInterface;
 import com.github.alvaronaschez.crm.infrastructure.UserEntity;
 
 import lombok.RequiredArgsConstructor;
@@ -14,12 +14,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final UserService userService;
+    private final UserRepositoryInterface userService;
 
     @Override
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
-        var user = userService.getActiveUserByUsername(username);
+        var user = userService.findActiveUserByUsername(username);
         if (user.isEmpty() || !user.get().isActive()) {
             throw new UsernameNotFoundException(
                     String.format("user with username '%s' not found", username));

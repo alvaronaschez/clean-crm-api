@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.github.alvaronaschez.crm.application.CustomerService;
-import com.github.alvaronaschez.crm.application.UserService;
 import com.github.alvaronaschez.crm.application.CustomerService.CustomerAlreadyExistsException;
 import com.github.alvaronaschez.crm.application.CustomerService.CustomerNotFoundException;
 import com.github.alvaronaschez.crm.application.CustomerService.UploadFailureException;
@@ -37,8 +36,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CustomerController {
     private final CustomerService customerService;
-
-    private final UserService userService;
 
     @PostMapping
     @ResponseStatus(code = HttpStatus.CREATED)
@@ -70,11 +67,14 @@ public class CustomerController {
     @DeleteMapping("/{id}")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id, @AuthenticationPrincipal SecurityUser user) {
-        var deleter = userService.getActiveUserByUsername(user.getUsername()).get();
+        String deleterUsername = user.getUsername();
         try {
-            customerService.deleteCustomer(id, deleter);
+            customerService.deleteCustomer(id, deleterUsername);
         } catch (CustomerNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        } catch (UserNotFoundException e) {
+            // illegal state
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

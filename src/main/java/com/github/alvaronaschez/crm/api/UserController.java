@@ -2,7 +2,6 @@ package com.github.alvaronaschez.crm.api;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -20,12 +19,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.github.alvaronaschez.crm.application.UserService;
 import com.github.alvaronaschez.crm.application.UserService.UserAlreadyExistsException;
+import com.github.alvaronaschez.crm.application.UserService.UserIllegalUpdateException;
 import com.github.alvaronaschez.crm.application.UserService.UserNotFoundException;
-import com.github.alvaronaschez.crm.application.dto.UserCreateDTO;
+import com.github.alvaronaschez.crm.application.dto.CreateUserDTO;
 import com.github.alvaronaschez.crm.application.dto.UserOutDTO;
-import com.github.alvaronaschez.crm.application.dto.UserPartialDTO;
+import com.github.alvaronaschez.crm.application.dto.UpdateUserDTO;
 import com.github.alvaronaschez.crm.configuration.security.SecurityUser;
-import com.github.alvaronaschez.crm.domain.User;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,51 +37,60 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(code = HttpStatus.CREATED)
-    public UserOutDTO create(@RequestBody UserCreateDTO user) {
-        var encodedPassword = passwordEncoder.encode(user.getPassword());
-        var u = new User(user.getUsername(), encodedPassword, user.getRoles());
+    public UserOutDTO create(@RequestBody CreateUserDTO user) {
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        var u = new CreateUserDTO(user.getUsername(), encodedPassword, user.getRoles());
         try {
-            userService.createUser(u);
+            return userService.createUser(u);
         } catch (UserAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
-        return UserOutDTO.fromDomain(u);
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(code = HttpStatus.OK)
     public UserOutDTO user(@PathVariable UUID id) {
-        var user = userService.getUserById(id);
-        if (user.isEmpty()) {
+
+        try {
+            return userService.getUserById(id);
+        } catch (UserNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-        return UserOutDTO.fromDomain(user.get());
     }
 
     @GetMapping
     @ResponseStatus(code = HttpStatus.OK)
     public List<UserOutDTO> list() {
-        return userService.getUsers().stream()
-                .map(user -> UserOutDTO.fromDomain(user))
-                .collect(Collectors.toList());
+        return userService.getUsers();
     }
 
     @PatchMapping("/{id}")
     @ResponseStatus(code = HttpStatus.OK)
-    public UserOutDTO partialUpdate(@PathVariable UUID id, @RequestBody UserPartialDTO user,
+    public UserOutDTO partialUpdate(@PathVariable UUID id, @RequestBody UpdateUserDTO user,
             Authentication authentication) {
         var encodedPassword = user.getPassword().map(p -> passwordEncoder.encode(p));
-        var updatedUser = userService.partialUpdate(id, user.getUsername(), encodedPassword, user.getRoles());
-        if (updatedUser.isEmpty()) {
+        user = new UpdateUserDTO(user.getUsername(), encodedPassword, user.getRoles());
+
+        UserOutDTO response;
+        try {
+            response = userService.partialUpdate(id, user);
+        } catch (UserNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        } catch (UserAlreadyExistsException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
+        } catch (UserIllegalUpdateException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
+
         // update session if current logged in user has changed
         SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
         var loggedInUser = securityUser.getUser().toDomain();
-        if (loggedInUser.getId() == updatedUser.get().getId()) {
+        if (loggedInUser.getId() == response.getId()) {
             // TODO: update session
         }
-        return UserOutDTO.fromDomain(updatedUser.get());
+
+        return response;
+
     }
 
     @DeleteMapping("/{id}")
@@ -98,9 +106,7 @@ public class UserController {
     @GetMapping("/active")
     @ResponseStatus(code = HttpStatus.OK)
     public List<UserOutDTO> active() {
-        return userService.getActiveUsers().stream()
-                .map(user -> UserOutDTO.fromDomain(user))
-                .collect(Collectors.toList());
+        return userService.getActiveUsers();
     }
 
     // @GetMapping("/admins")

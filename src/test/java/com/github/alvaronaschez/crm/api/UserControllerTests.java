@@ -40,7 +40,7 @@ class UserControllerTests {
     @Test
     @WithUserDetails(value = "admin")
     void getUserById() throws Exception {
-        var user = this.userService.getActiveUserByUsername("user").get();
+        var user = this.userService.getActiveUserByUsername("user");
         this.mvc.perform(get("/v1/users/" + user.getId().toString()).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(user.getId().toString()))
@@ -53,7 +53,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "joedoe", roles = {})
     void getUserByIdWithNoAdmin() throws Exception {
-        var user = this.userService.getActiveUserByUsername("user").get();
+        var user = this.userService.getActiveUserByUsername("user");
         this.mvc.perform(get("/v1/users/" + user.getId().toString()).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }

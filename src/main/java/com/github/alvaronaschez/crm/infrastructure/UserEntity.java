@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE) // required by JPA
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-@SQLDelete(sql = "UPDATE users SET is_active = false WHERE id=?")
+@SQLDelete(sql = "UPDATE users SET active = false WHERE id=?")
 public class UserEntity implements Serializable {
     @Id
     private UUID id;

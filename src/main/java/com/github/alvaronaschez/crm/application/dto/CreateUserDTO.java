@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public class UserCreateDTO {
+public class CreateUserDTO {
     @NonNull
     private final String username;
     @NonNull
