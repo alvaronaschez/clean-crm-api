@@ -1,9 +1,7 @@
 package com.github.alvaronaschez.crm.api;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,10 +24,11 @@ import com.github.alvaronaschez.crm.application.UserService;
 import com.github.alvaronaschez.crm.application.CustomerService.CustomerAlreadyExistsException;
 import com.github.alvaronaschez.crm.application.CustomerService.CustomerNotFoundException;
 import com.github.alvaronaschez.crm.application.CustomerService.UploadFailureException;
-import com.github.alvaronaschez.crm.application.dto.CustomerInDTO;
+import com.github.alvaronaschez.crm.application.CustomerService.UserNotFoundException;
+import com.github.alvaronaschez.crm.application.dto.CreateCustomerDTO;
 import com.github.alvaronaschez.crm.application.dto.CustomerOutDTO;
+import com.github.alvaronaschez.crm.application.dto.UpdateCustomerDTO;
 import com.github.alvaronaschez.crm.configuration.security.SecurityUser;
-import com.github.alvaronaschez.crm.domain.Customer;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,33 +42,29 @@ public class CustomerController {
 
     @PostMapping
     @ResponseStatus(code = HttpStatus.CREATED)
-    public CustomerOutDTO create(@RequestBody CustomerInDTO customer, @AuthenticationPrincipal SecurityUser user) {
-        var creator = userService.getActiveUserByUsername(user.getUsername()).get();
-        Customer c = customer.toDomain(creator);
+    public CustomerOutDTO createCustomer(@RequestBody CreateCustomerDTO customer,
+            @AuthenticationPrincipal SecurityUser user) {
         try {
-            customerService.createCustomer(c);
+            return customerService.createCustomer(customer, user.getUsername());
         } catch (CustomerAlreadyExistsException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
-        return CustomerOutDTO.fromDomain(c);
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(code = HttpStatus.OK)
-    public CustomerOutDTO getById(@PathVariable UUID id) {
-        Optional<Customer> customer = customerService.getById(id);
-        if (customer.isEmpty()) {
+    public CustomerOutDTO getCustomerById(@PathVariable UUID id) {
+        try {
+            return customerService.getById(id);
+        } catch (CustomerNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-        return CustomerOutDTO.fromDomain(customer.get());
     }
 
     @GetMapping
     @ResponseStatus(code = HttpStatus.OK)
     public List<CustomerOutDTO> list() {
-        return customerService.getCustomers().stream()
-                .map(c -> CustomerOutDTO.fromDomain(c))
-                .collect(Collectors.toList());
+        return customerService.getCustomers();
     }
 
     @DeleteMapping("/{id}")
@@ -83,37 +78,29 @@ public class CustomerController {
         }
     }
 
-    @PutMapping
-    public CustomerOutDTO update(CustomerInDTO c, @AuthenticationPrincipal SecurityUser user) {
-        var updater = userService.getActiveUserByUsername(user.getUsername()).get();
-        Customer customer;
+    @PutMapping("/{id}")
+    public CustomerOutDTO update(@PathVariable UUID id, @RequestBody UpdateCustomerDTO c,
+            @AuthenticationPrincipal SecurityUser user) {
         try {
-            customer = customerService.updateCustomer(c.toDomain(updater));
+            return customerService.updateCustomer(id, c, user.getUsername());
         } catch (CustomerNotFoundException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-        return CustomerOutDTO.fromDomain(customer);
     }
 
     @PostMapping("/{id}/upload-photo")
-    public ResponseEntity<String> uploadPhoto(@PathVariable UUID id, @RequestParam("file") MultipartFile file) {
-        var customer = customerService.getById(id);
-        if (customer.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
-        String fileUri;
+    public ResponseEntity<String> uploadPhoto(@PathVariable UUID id, @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal SecurityUser user) {
         try {
-            fileUri = customerService.uploadPhoto(id, file);
+            String fileUri = customerService.updatePhoto(id, file, user.getUsername());
+            return ResponseEntity.ok(fileUri);
+        } catch (CustomerNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         } catch (UploadFailureException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        try {
-            customerService.updateCustomer(
-                    customer.get().withPhoto(Optional.of(fileUri)));
-        } catch (CustomerNotFoundException e) {
+        } catch (UserNotFoundException e) {
             // unreachable
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return ResponseEntity.ok(fileUri);
     }
-
 }

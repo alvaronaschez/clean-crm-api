@@ -1,12 +1,18 @@
 package com.github.alvaronaschez.crm.application;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.github.alvaronaschez.crm.application.dto.CreateCustomerDTO;
+import com.github.alvaronaschez.crm.application.dto.CustomerOutDTO;
+import com.github.alvaronaschez.crm.application.dto.UpdateCustomerDTO;
 import com.github.alvaronaschez.crm.domain.Customer;
 import com.github.alvaronaschez.crm.domain.User;
 
@@ -18,25 +24,34 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CustomerService {
     private final CustomerRepositoryInterface customerRepository;
+    private final UserRepositoryInterface userRepository;
     private final CustomerStorageInterface customerStorage;
 
-    public void createCustomer(Customer customer) throws CustomerAlreadyExistsException {
+    public CustomerOutDTO createCustomer(CreateCustomerDTO customer, String creatorUsername)
+            throws CustomerAlreadyExistsException {
         if (customerRepository.findByEmail(customer.getEmail()).isPresent()) {
             throw new CustomerAlreadyExistsException();
         }
-        customerRepository.save(customer);
+        User creator = userRepository.findActiveUserByUsername(creatorUsername).get();
+        Customer newCustomer = customer.toDomain(creator);
+        customerRepository.save(newCustomer);
+        return CustomerOutDTO.fromDomain(newCustomer);
     }
 
-    public Optional<Customer> getById(UUID id) {
-        return customerRepository.findById(id);
+    public CustomerOutDTO getById(UUID id) throws CustomerNotFoundException {
+        Customer customer = customerRepository.findById(id).orElseThrow(CustomerNotFoundException::new);
+        return CustomerOutDTO.fromDomain(customer);
     }
 
-    public Optional<Customer> getByEmail(String email) {
-        return customerRepository.findByEmail(email);
+    public CustomerOutDTO getByEmail(String email) throws CustomerNotFoundException {
+        Customer customer = customerRepository.findByEmail(email).orElseThrow(CustomerNotFoundException::new);
+        return CustomerOutDTO.fromDomain(customer);
     }
 
-    public List<Customer> getCustomers() {
-        return customerRepository.findAll();
+    public List<CustomerOutDTO> getCustomers() {
+        return customerRepository.findAll().stream()
+                .map(c -> CustomerOutDTO.fromDomain(c))
+                .collect(Collectors.toList());
     }
 
     public void deleteCustomer(UUID id, User deleter) throws CustomerNotFoundException {
@@ -48,24 +63,52 @@ public class CustomerService {
         customerRepository.deleteById(id);
     }
 
-    public Customer updateCustomer(Customer customer) throws CustomerNotFoundException {
-        var existingCustomer = customerRepository.findByEmail(customer.getEmail());
-        if (existingCustomer.isEmpty()) {
+    public CustomerOutDTO updateCustomer(UUID id, UpdateCustomerDTO customer, String creatorUsername)
+            throws CustomerNotFoundException {
+        User modifier = userRepository.findActiveUserByUsername(creatorUsername).get();
+        Customer existingCustomer;
+        try {
+            existingCustomer = customerRepository.findById(id).get();
+        } catch (NoSuchElementException e) {
             throw new CustomerNotFoundException();
         }
-        var id = existingCustomer.get().getId();
-        var updatedCustomer = customer.withId(id);
-        // maintain existing photo (if exists)
-        var photo = existingCustomer.get().getPhoto();
-        if (photo.isPresent()) {
-            updatedCustomer = updatedCustomer.withPhoto(photo);
-        }
+
+        var updatedCustomer = new Customer(
+                id,
+                customer.getEmail(),
+                customer.getFirstName(),
+                customer.getLastName(),
+                existingCustomer.getPhoto(),
+                modifier,
+                Instant.now(),
+                true);
         customerRepository.save(updatedCustomer);
-        return updatedCustomer;
+        return CustomerOutDTO.fromDomain(updatedCustomer);
     }
 
-    public String uploadPhoto(UUID id, MultipartFile file) throws UploadFailureException {
-        return customerStorage.uploadFile(file);
+    public String updatePhoto(UUID id, MultipartFile file, String modifierUsername)
+            throws CustomerNotFoundException, UploadFailureException, UserNotFoundException {
+        Customer existingCustomer;
+        try {
+            existingCustomer = customerRepository.findById(id).get();
+        } catch (NoSuchElementException e) {
+            throw new CustomerNotFoundException();
+        }
+
+        User modifier;
+        try {
+            modifier = userRepository.findActiveUserByUsername(modifierUsername).get();
+        } catch (NoSuchElementException e) {
+            throw new UserNotFoundException();
+        }
+
+        String photoUrl = customerStorage.uploadFile(file);
+
+        Customer updatedCustomer = existingCustomer
+                .withPhoto(Optional.of(photoUrl))
+                .withLastModifiedBy(modifier);
+        customerRepository.save(updatedCustomer);
+        return photoUrl;
     }
 
     public static class CustomerAlreadyExistsException extends Exception {
@@ -75,6 +118,9 @@ public class CustomerService {
     }
 
     public static class UploadFailureException extends Exception {
+    }
+
+    public static class UserNotFoundException extends Exception {
     }
 
 }

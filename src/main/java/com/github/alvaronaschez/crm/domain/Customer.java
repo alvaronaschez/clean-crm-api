@@ -30,11 +30,14 @@ public class Customer {
     private final Optional<String> photo;
 
     @NonNull
-    @With
     private final User lastModifiedBy;
 
     @NonNull
     private final Instant lastModifiedAt;
 
     private final boolean active;
+
+    public Customer withLastModifiedBy(User user) {
+        return new Customer(id, email, firstName, lastName, photo, user, Instant.now(), active);
+    }
 }
