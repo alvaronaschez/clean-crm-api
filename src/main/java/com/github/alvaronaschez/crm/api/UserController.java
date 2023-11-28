@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.github.alvaronaschez.crm.api.dto.UserCreateDTO;
-import com.github.alvaronaschez.crm.api.dto.UserOutDTO;
-import com.github.alvaronaschez.crm.api.dto.UserPartialDTO;
 import com.github.alvaronaschez.crm.application.UserService;
 import com.github.alvaronaschez.crm.application.UserService.UserAlreadyExistsException;
 import com.github.alvaronaschez.crm.application.UserService.UserNotFoundException;
+import com.github.alvaronaschez.crm.application.dto.UserCreateDTO;
+import com.github.alvaronaschez.crm.application.dto.UserOutDTO;
+import com.github.alvaronaschez.crm.application.dto.UserPartialDTO;
 import com.github.alvaronaschez.crm.configuration.security.SecurityUser;
 import com.github.alvaronaschez.crm.domain.User;
 

@@ -1,4 +1,4 @@
-package com.github.alvaronaschez.crm.api.dto;
+package com.github.alvaronaschez.crm.application.dto;
 
 import java.util.Set;
 import java.util.UUID;
