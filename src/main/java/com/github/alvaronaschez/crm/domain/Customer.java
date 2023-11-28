@@ -36,5 +36,5 @@ public class Customer {
     @NonNull
     private final Instant lastModifiedAt;
 
-    private final boolean isActive;
+    private final boolean active;
 }

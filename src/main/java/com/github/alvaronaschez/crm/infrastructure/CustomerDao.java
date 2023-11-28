@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CustomerDao extends CrudRepository<CustomerEntity, UUID> {
-    // @Query("select e from #{#entityName} e where e.email = ?1 and e.is_active =
+    // @Query("select e from #{#entityName} e where e.email = ?1 and e.active =
     // true")
     public Optional<CustomerEntity> findByEmail(String email);
 }

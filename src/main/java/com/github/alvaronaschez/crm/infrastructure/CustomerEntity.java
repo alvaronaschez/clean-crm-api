@@ -25,8 +25,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE) // required by JPA
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-@SQLDelete(sql = "UPDATE customers SET is_active = false WHERE id=?")
-@Where(clause = "is_active=true")
+@SQLDelete(sql = "UPDATE customers SET active = false WHERE id=?")
+@Where(clause = "active=true")
 public class CustomerEntity {
     @Id
     private UUID id;
@@ -48,8 +48,7 @@ public class CustomerEntity {
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     private UserEntity lastModifiedBy;
 
-    @Column(name = "is_active")
-    private boolean isActive;
+    private boolean active;
 
     public static CustomerEntity fromDomain(Customer c) {
         var modifiedBy = UserEntity.fromDomain(c.getLastModifiedBy());
@@ -66,6 +65,6 @@ public class CustomerEntity {
 
     public Customer toDomain() {
         Optional<String> photo = Optional.ofNullable(this.photo);
-        return new Customer(id, email, firstName, lastName, photo, lastModifiedBy.toDomain(), lastModifiedAt, isActive);
+        return new Customer(id, email, firstName, lastName, photo, lastModifiedBy.toDomain(), lastModifiedAt, active);
     }
 }
