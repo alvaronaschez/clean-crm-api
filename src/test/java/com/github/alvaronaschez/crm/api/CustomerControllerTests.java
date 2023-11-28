@@ -1,8 +1,14 @@
 package com.github.alvaronaschez.crm.api;
 
+import static org.junit.Assert.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -21,6 +27,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.alvaronaschez.crm.application.UserService;
+import com.github.alvaronaschez.crm.application.dto.CustomerOutDTO;
 import com.github.alvaronaschez.crm.configuration.SpringProfiles;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -31,6 +40,12 @@ import com.github.alvaronaschez.crm.configuration.SpringProfiles;
 public class CustomerControllerTests {
     @Autowired
     protected MockMvc mvc;
+
+    @Autowired
+    UserService userService;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Container
     @ServiceConnection
@@ -46,18 +61,55 @@ public class CustomerControllerTests {
     @Test
     @Order(2)
     @WithUserDetails(value = "admin")
-    void create() throws Exception {
+    void happyPathTest() throws Exception {
+        var admin = this.userService.getActiveUserByUsername("admin").get();
         var result = this.mvc.perform(
                 post("/v1/customers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                    "email": "joedoe",
+                                    "email": "joedoe@gmail.com",
                                     "firstName": "Joe",
                                     "lastName": "Doe"
                                 }
                                 """))
-                .andExpect(status().isCreated()).andReturn();
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value("joedoe@gmail.com"))
+                .andExpect(jsonPath("$.firstName").value("Joe"))
+                .andExpect(jsonPath("$.lastName").value("Doe"))
+                .andExpect(jsonPath("$.lastModifiedBy").value(admin.getId().toString()))
+                .andReturn();
+        // ObjectMapper objectMapper = new ObjectMapper();
+        String jsonResponse = result.getResponse().getContentAsString();
+        String customerId = objectMapper.readValue(jsonResponse, CustomerOutDTO.class).getId().toString();
+        String customerUrl = String.format("/v1/customers/%s", customerId);
+        this.mvc.perform(
+                put(customerUrl)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "email": "janedoe@gmail.com",
+                                    "firstName": "Jane",
+                                    "lastName": "Doe"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(customerId))
+                .andExpect(jsonPath("$.email").value("janedoe@gmail.com"))
+                .andExpect(jsonPath("$.firstName").value("Jane"))
+                .andExpect(jsonPath("$.lastName").value("Doe"))
+                .andExpect(jsonPath("$.lastModifiedBy").value(admin.getId().toString()));
+        jsonResponse = this.mvc.perform(get("/v1/customers")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        var javaType = objectMapper.getTypeFactory().constructParametricType(List.class,
+                CustomerOutDTO.class);
+        var customers = objectMapper.readValue(jsonResponse, javaType);
+        assertEquals(((List<CustomerOutDTO>) customers).size(), 1);
+        this.mvc.perform(delete(customerUrl)).andExpect(status().isNoContent());
+        jsonResponse = this.mvc.perform(get("/v1/customers")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertEquals(jsonResponse, "[]");
     }
 }
