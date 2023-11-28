@@ -21,13 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.github.alvaronaschez.crm.api.dto.CustomerInDTO;
-import com.github.alvaronaschez.crm.api.dto.CustomerOutDTO;
 import com.github.alvaronaschez.crm.application.CustomerService;
 import com.github.alvaronaschez.crm.application.UserService;
 import com.github.alvaronaschez.crm.application.CustomerService.CustomerAlreadyExistsException;
 import com.github.alvaronaschez.crm.application.CustomerService.CustomerNotFoundException;
 import com.github.alvaronaschez.crm.application.CustomerService.UploadFailureException;
+import com.github.alvaronaschez.crm.application.dto.CustomerInDTO;
+import com.github.alvaronaschez.crm.application.dto.CustomerOutDTO;
 import com.github.alvaronaschez.crm.configuration.security.SecurityUser;
 import com.github.alvaronaschez.crm.domain.Customer;
 

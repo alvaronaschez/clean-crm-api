@@ -1,7 +1,7 @@
 package com.github.alvaronaschez.crm.api;
 
-import com.github.alvaronaschez.crm.api.dto.LoginRequestDTO;
-import com.github.alvaronaschez.crm.api.dto.UserOutDTO;
+import com.github.alvaronaschez.crm.application.dto.LoginRequestDTO;
+import com.github.alvaronaschez.crm.application.dto.UserOutDTO;
 import com.github.alvaronaschez.crm.configuration.security.SecurityUser;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
