@@ -7,20 +7,19 @@ import com.github.alvaronaschez.crm.domain.User;
 import com.github.alvaronaschez.crm.domain.UserRole;
 
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-@Getter
+@Value
 public class UserOutDTO {
-    @NonNull
-    private final UUID id;
-    @NonNull
-    private final String username;
-    @NonNull
-    private final Set<UserRole> roles;
+    // @formatter:off
+    @NonNull UUID id;
+    @NonNull String username;
+    @NonNull Set<UserRole> roles;
     private final boolean active;
+    // @formatter:off
 
     public static @NonNull UserOutDTO fromDomain(@NonNull User user) {
         return new UserOutDTO(user.getId(), user.getUsername(), user.getRoles(), user.isActive());

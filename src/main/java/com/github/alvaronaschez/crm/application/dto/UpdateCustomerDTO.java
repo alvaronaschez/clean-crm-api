@@ -1,16 +1,14 @@
 package com.github.alvaronaschez.crm.application.dto;
 
-import lombok.RequiredArgsConstructor;
-import lombok.Getter;
+import lombok.Value;
 import lombok.NonNull;
 
-@RequiredArgsConstructor
-@Getter
+@Value
 public class UpdateCustomerDTO {
-    @NonNull
-    private final String email;
-    @NonNull
-    private final String firstName;
+    // @formatter:off
+    @NonNull String email;
+    @NonNull String firstName;
     @NonNull
     private final String lastName;
+    // @formatter:off
 }
