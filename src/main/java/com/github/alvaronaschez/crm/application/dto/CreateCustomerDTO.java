@@ -13,7 +13,7 @@ import lombok.NonNull;
 
 @RequiredArgsConstructor
 @Getter
-public class CustomerInDTO {
+public class CreateCustomerDTO {
     @NonNull
     private final String email;
     @NonNull
