@@ -39,8 +39,8 @@ public class UserEntity implements Serializable {
     @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "username"), inverseJoinColumns = @JoinColumn(name = "role"))
     private Set<RoleEntity> roles;
 
-    @Column(name = "is_active")
-    private boolean isActive;
+    @Column(name = "active")
+    private boolean active;
 
     public static UserEntity fromDomain(User user) {
         var roles = user.getRoles().stream().map(role -> new RoleEntity(role)).collect(Collectors.toSet());

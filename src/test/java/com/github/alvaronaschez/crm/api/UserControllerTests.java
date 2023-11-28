@@ -45,7 +45,7 @@ class UserControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(user.getId().toString()))
                 .andExpect(jsonPath("$.username").value(user.getUsername()))
-                .andExpect(jsonPath("$.isActive").value(user.isActive()))
+                .andExpect(jsonPath("$.active").value(user.isActive()))
                 .andExpect(jsonPath("$.roles").isEmpty());
 
     }

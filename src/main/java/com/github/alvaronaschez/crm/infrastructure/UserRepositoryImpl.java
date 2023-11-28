@@ -51,7 +51,7 @@ public class UserRepositoryImpl implements UserRepositoryInterface {
 
     @Override
     public List<User> findActive() {
-        return userRepository.findByIsActive(true)
+        return userRepository.findByActive(true)
                 .stream().map(u -> u.toDomain()).collect(Collectors.toList());
     }
 

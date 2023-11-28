@@ -10,10 +10,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserDao extends CrudRepository<UserEntity, UUID> {
-    @Query("select e from #{#entityName} e where e.username = ?1 and e.is_active = true")
+    @Query("select e from #{#entityName} e where e.username = ?1 and e.active = true")
     Optional<UserEntity> findByUsername(String username);
 
-    public List<UserEntity> findByIsActive(boolean active);
+    public List<UserEntity> findByActive(boolean active);
 
     // public List<UserEntity> findByRoles(Set<RoleEntity> roles);
 
