@@ -5,19 +5,16 @@ import java.util.Set;
 import com.github.alvaronaschez.crm.domain.User;
 import com.github.alvaronaschez.crm.domain.UserRole;
 
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
-@RequiredArgsConstructor
-@Getter
+@Value
 public class CreateUserDTO {
-    @NonNull
-    private final String username;
-    @NonNull
-    private final String password;
-    @NonNull
-    private final Set<UserRole> roles;
+    // @formatter:off
+    @NonNull String username;
+    @NonNull String password;
+    @NonNull Set<UserRole> roles;
+    // @formatter:on
 
     public @NonNull User toDomain() {
         return new User(username, password, roles);

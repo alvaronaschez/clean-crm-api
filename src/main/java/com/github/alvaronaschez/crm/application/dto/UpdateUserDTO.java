@@ -5,17 +5,14 @@ import java.util.Set;
 
 import com.github.alvaronaschez.crm.domain.UserRole;
 
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
-@RequiredArgsConstructor
-@Getter
+@Value
 public class UpdateUserDTO {
-    @NonNull
-    private final Optional<String> username;
-    @NonNull
-    private final Optional<String> password;
-    @NonNull
-    private final Optional<Set<UserRole>> roles;
+    // @formatter:off
+    @NonNull Optional<String> username;
+    @NonNull Optional<String> password;
+    @NonNull Optional<Set<UserRole>> roles;
+    // @formatter:on
 }

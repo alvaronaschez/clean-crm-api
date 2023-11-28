@@ -1,14 +1,12 @@
 package com.github.alvaronaschez.crm.application.dto;
 
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
-@RequiredArgsConstructor
-@Getter
+@Value
 public class LoginRequestDTO {
-    @NonNull
-    private final String username;
-    @NonNull
-    private final String password;
+    // @formatter:off
+    @NonNull String username;
+    @NonNull String password;
+    // @formatter:on
 }
