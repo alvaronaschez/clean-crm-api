@@ -54,12 +54,11 @@ public class CustomerService {
                 .collect(Collectors.toList());
     }
 
-    public void deleteCustomer(UUID id, User deleter) throws CustomerNotFoundException {
-        var customer = customerRepository.findById(id);
-        if (customer.isEmpty()) {
-            throw new CustomerNotFoundException();
-        }
-        customerRepository.save(customer.get().withLastModifiedBy(deleter));
+    public void deleteCustomer(UUID id, String deleterUsername)
+            throws CustomerNotFoundException, UserNotFoundException {
+        Customer customer = customerRepository.findById(id).orElseThrow(CustomerNotFoundException::new);
+        User deleter = userRepository.findActiveUserByUsername(deleterUsername).orElseThrow(UserNotFoundException::new);
+        customerRepository.save(customer.withLastModifiedBy(deleter));
         customerRepository.deleteById(id);
     }
 

@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public class UserPartialDTO {
+public class UpdateUserDTO {
     @NonNull
     private final Optional<String> username;
     @NonNull
